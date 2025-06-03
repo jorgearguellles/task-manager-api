@@ -1,16 +1,12 @@
-/*
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../../app');
 const User = require('../../models/user.model');
+const jwt = require('jsonwebtoken');
 
 describe('Auth Middleware', () => {
   let authToken;
   let testUser;
-
-  beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI);
-  });
 
   beforeEach(async () => {
     await User.deleteMany({});
@@ -56,9 +52,12 @@ describe('Auth Middleware', () => {
     });
 
     it('should deny access with expired token', async () => {
-      // Crear un token expirado
-      const expiredToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMzQ1Njc4OTAiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTUxNjIzOTAyMn0.2hDgYvYRtr7VZmHl2XGpLx0yJ4l9Y0yJ4l9Y0yJ4l9Y0';
+      // Generar un token expirado con la clave secreta de pruebas
+      const expiredToken = jwt.sign(
+        { id: testUser._id, role: 'user' },
+        process.env.JWT_SECRET,
+        { expiresIn: -10 } // Expirado hace 10 segundos
+      );
 
       const response = await request(app)
         .get('/api/tasks')
@@ -69,4 +68,3 @@ describe('Auth Middleware', () => {
     });
   });
 });
-*/

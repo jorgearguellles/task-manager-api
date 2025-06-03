@@ -39,6 +39,12 @@ const auth = async (req, res, next) => {
     next();
   } catch (error) {
     logger.error('Authentication error:', error);
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        error: 'Token expired',
+        message: 'El token ha expirado',
+      });
+    }
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         error: 'Invalid token',
