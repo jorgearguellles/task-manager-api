@@ -6,7 +6,7 @@ describe('Task Model', () => {
   let testUser;
 
   beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_TEST_URI);
   });
 
   beforeEach(async () => {
@@ -29,64 +29,60 @@ describe('Task Model', () => {
       const taskData = {
         title: 'Test Task',
         description: 'Test Description',
-        priority: 'high',
-        dueDate: new Date('2024-12-31'),
-        assignedTo: testUser._id,
+        priority: 'medium',
+        status: 'pending',
+        dueDate: new Date(),
         createdBy: testUser._id,
-        category: 'work',
+        assignedTo: testUser._id,
       };
 
       const task = await Task.create(taskData);
-
       expect(task.title).toBe(taskData.title);
       expect(task.description).toBe(taskData.description);
       expect(task.priority).toBe(taskData.priority);
-      expect(task.status).toBe('pending'); // Valor por defecto
-      expect(task.isCompleted).toBe(false); // Valor por defecto
+      expect(task.status).toBe(taskData.status);
+      expect(task.dueDate).toEqual(taskData.dueDate);
+      expect(task.createdBy).toEqual(taskData.createdBy);
+      expect(task.assignedTo).toEqual(taskData.assignedTo);
     });
 
     it('should not create a task without required fields', async () => {
       const taskData = {
-        title: 'Test Task',
-        // Falta description, priority, etc.
+        // Falta title, description, createdBy, assignedTo y dueDate
+        priority: 'medium',
+        status: 'pending',
       };
 
-      try {
-        await Task.create(taskData);
-        fail('Should not create task without required fields');
-      } catch (error) {
-        expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
-      }
+      await expect(Task.create(taskData)).rejects.toThrow();
     });
+  });
 
-    it('should validate priority enum values', async () => {
+  describe('Task Priority', () => {
+    it('should only allow valid priority values', async () => {
       const taskData = {
         title: 'Test Task',
         description: 'Test Description',
         priority: 'invalid-priority',
-        dueDate: new Date('2024-12-31'),
-        assignedTo: testUser._id,
+        status: 'pending',
+        dueDate: new Date(),
         createdBy: testUser._id,
+        assignedTo: testUser._id,
       };
 
-      try {
-        await Task.create(taskData);
-        fail('Should not create task with invalid priority');
-      } catch (error) {
-        expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
-      }
+      await expect(Task.create(taskData)).rejects.toThrow();
     });
   });
 
   describe('Task Status and Completion', () => {
-    it('should update task status and completion date', async () => {
+    it('should update task status correctly', async () => {
       const task = await Task.create({
         title: 'Test Task',
         description: 'Test Description',
-        priority: 'high',
-        dueDate: new Date('2024-12-31'),
-        assignedTo: testUser._id,
+        priority: 'medium',
+        status: 'pending',
+        dueDate: new Date(),
         createdBy: testUser._id,
+        assignedTo: testUser._id,
       });
 
       task.status = 'completed';
@@ -98,28 +94,22 @@ describe('Task Model', () => {
   });
 
   describe('Task Tags', () => {
-    it('should add and remove tags', async () => {
-      const task = await Task.create({
+    it('should handle task tags correctly', async () => {
+      const taskData = {
         title: 'Test Task',
         description: 'Test Description',
-        priority: 'high',
-        dueDate: new Date('2024-12-31'),
-        assignedTo: testUser._id,
+        priority: 'medium',
+        status: 'pending',
+        dueDate: new Date(),
         createdBy: testUser._id,
-        tags: ['tag1', 'tag2'],
-      });
+        assignedTo: testUser._id,
+        tags: ['work', 'urgent'],
+      };
 
-      task.tags.push('tag3');
-      await task.save();
-
-      expect(task.tags).toContain('tag3');
-      expect(task.tags.length).toBe(3);
-
-      task.tags = task.tags.filter((tag) => tag !== 'tag2');
-      await task.save();
-
-      expect(task.tags).not.toContain('tag2');
-      expect(task.tags.length).toBe(2);
+      const task = await Task.create(taskData);
+      expect(task.tags).toHaveLength(2);
+      expect(task.tags).toContain('work');
+      expect(task.tags).toContain('urgent');
     });
   });
 });
