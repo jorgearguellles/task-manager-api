@@ -83,6 +83,13 @@ userSchema.methods.toPublicJSON = function () {
   return user;
 };
 
+// Método para actualizar la fecha de último acceso
+userSchema.methods.updateLastLogin = async function () {
+  this.lastLogin = new Date();
+  await this.save();
+  return this;
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

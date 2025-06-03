@@ -1,12 +1,12 @@
 {
   "name": "task-manager-api",
   "version": "1.0.0",
-  "description": "API RESTful profesional para gestión de tareas con Node.js, Express y MongoDB",
+  "description": "API REST para gestión de tareas",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/",
@@ -45,6 +45,7 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "eslint": "^9.27.0",
     "eslint-config-node": "^4.1.0",
     "eslint-plugin-node": "^11.1.0",
