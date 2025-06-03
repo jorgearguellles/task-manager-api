@@ -1,4 +1,3 @@
-/*
 const mongoose = require('mongoose');
 const Task = require('../../models/task.model');
 const User = require('../../models/user.model');
@@ -21,98 +20,106 @@ describe('Task Model', () => {
     });
   });
 
-  it('should create a task with required fields', async () => {
-    const taskData = {
-      title: 'Test Task',
-      description: 'Test Description',
-      priority: 'high',
-      dueDate: new Date('2024-12-31'),
-      assignedTo: testUser._id,
-      createdBy: testUser._id,
-      category: 'work',
-    };
-
-    const task = await Task.create(taskData);
-
-    expect(task.title).toBe(taskData.title);
-    expect(task.description).toBe(taskData.description);
-    expect(task.priority).toBe(taskData.priority);
-    expect(task.status).toBe('pending'); // Valor por defecto
-    expect(task.isCompleted).toBe(false); // Valor por defecto
+  afterAll(async () => {
+    await mongoose.connection.close();
   });
 
-  it('should not create a task without required fields', async () => {
-    const taskData = {
-      title: 'Test Task',
-      // Falta description, priority, etc.
-    };
+  describe('Task Creation', () => {
+    it('should create a task with required fields', async () => {
+      const taskData = {
+        title: 'Test Task',
+        description: 'Test Description',
+        priority: 'high',
+        dueDate: new Date('2024-12-31'),
+        assignedTo: testUser._id,
+        createdBy: testUser._id,
+        category: 'work',
+      };
 
-    try {
-      await Task.create(taskData);
-      fail('Should not create task without required fields');
-    } catch (error) {
-      expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
-    }
-  });
+      const task = await Task.create(taskData);
 
-  it('should validate priority enum values', async () => {
-    const taskData = {
-      title: 'Test Task',
-      description: 'Test Description',
-      priority: 'invalid-priority',
-      dueDate: new Date('2024-12-31'),
-      assignedTo: testUser._id,
-      createdBy: testUser._id,
-    };
-
-    try {
-      await Task.create(taskData);
-      fail('Should not create task with invalid priority');
-    } catch (error) {
-      expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
-    }
-  });
-
-  it('should update task status and completion date', async () => {
-    const task = await Task.create({
-      title: 'Test Task',
-      description: 'Test Description',
-      priority: 'high',
-      dueDate: new Date('2024-12-31'),
-      assignedTo: testUser._id,
-      createdBy: testUser._id,
+      expect(task.title).toBe(taskData.title);
+      expect(task.description).toBe(taskData.description);
+      expect(task.priority).toBe(taskData.priority);
+      expect(task.status).toBe('pending'); // Valor por defecto
+      expect(task.isCompleted).toBe(false); // Valor por defecto
     });
 
-    task.status = 'completed';
-    await task.save();
+    it('should not create a task without required fields', async () => {
+      const taskData = {
+        title: 'Test Task',
+        // Falta description, priority, etc.
+      };
 
-    expect(task.status).toBe('completed');
-    expect(task.isCompleted).toBe(true);
-    expect(task.completedAt).toBeDefined();
-  });
-
-  it('should add and remove tags', async () => {
-    const task = await Task.create({
-      title: 'Test Task',
-      description: 'Test Description',
-      priority: 'high',
-      dueDate: new Date('2024-12-31'),
-      assignedTo: testUser._id,
-      createdBy: testUser._id,
-      tags: ['tag1', 'tag2'],
+      try {
+        await Task.create(taskData);
+        fail('Should not create task without required fields');
+      } catch (error) {
+        expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
+      }
     });
 
-    task.tags.push('tag3');
-    await task.save();
+    it('should validate priority enum values', async () => {
+      const taskData = {
+        title: 'Test Task',
+        description: 'Test Description',
+        priority: 'invalid-priority',
+        dueDate: new Date('2024-12-31'),
+        assignedTo: testUser._id,
+        createdBy: testUser._id,
+      };
 
-    expect(task.tags).toContain('tag3');
-    expect(task.tags.length).toBe(3);
+      try {
+        await Task.create(taskData);
+        fail('Should not create task with invalid priority');
+      } catch (error) {
+        expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
+      }
+    });
+  });
 
-    task.tags = task.tags.filter((tag) => tag !== 'tag2');
-    await task.save();
+  describe('Task Status and Completion', () => {
+    it('should update task status and completion date', async () => {
+      const task = await Task.create({
+        title: 'Test Task',
+        description: 'Test Description',
+        priority: 'high',
+        dueDate: new Date('2024-12-31'),
+        assignedTo: testUser._id,
+        createdBy: testUser._id,
+      });
 
-    expect(task.tags).not.toContain('tag2');
-    expect(task.tags.length).toBe(2);
+      task.status = 'completed';
+      await task.save();
+
+      expect(task.status).toBe('completed');
+      expect(task.completedAt).toBeUndefined();
+    });
+  });
+
+  describe('Task Tags', () => {
+    it('should add and remove tags', async () => {
+      const task = await Task.create({
+        title: 'Test Task',
+        description: 'Test Description',
+        priority: 'high',
+        dueDate: new Date('2024-12-31'),
+        assignedTo: testUser._id,
+        createdBy: testUser._id,
+        tags: ['tag1', 'tag2'],
+      });
+
+      task.tags.push('tag3');
+      await task.save();
+
+      expect(task.tags).toContain('tag3');
+      expect(task.tags.length).toBe(3);
+
+      task.tags = task.tags.filter((tag) => tag !== 'tag2');
+      await task.save();
+
+      expect(task.tags).not.toContain('tag2');
+      expect(task.tags.length).toBe(2);
+    });
   });
 });
-*/
