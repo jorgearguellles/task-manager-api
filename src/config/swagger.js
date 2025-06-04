@@ -7,7 +7,11 @@ const options = {
       title: 'Task Manager API',
       version: '1.0.0',
       description:
-        'API para gestión de tareas con autenticación y validación de datos.',
+        'API para gestión de tareas con autenticación y autorización',
+      contact: {
+        name: 'Jorge Arias',
+        email: 'jorgeariasarguelles@gmail.com',
+      },
     },
     servers: [
       {
@@ -30,7 +34,7 @@ const options = {
       },
     ],
   },
-  apis: ['./src/routes/*.js'], // Ruta a los archivos de rutas para documentar
+  apis: ['./src/routes/*.js'], // Archivos que contienen anotaciones de Swagger
 };
 
 const specs = swaggerJsdoc(options);

@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./config/swagger');
+const { errorHandler } = require('./middleware/error.middleware');
 require('dotenv').config();
 
 const logger = require('./config/logger');
@@ -97,17 +98,7 @@ app.use('*', (req, res) => {
 });
 
 // Middleware global de manejo de errores
-app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', err);
-
-  res.status(err.status || 500).json({
-    error:
-      process.env.NODE_ENV === 'production'
-        ? 'Internal server error'
-        : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
-  });
-});
+app.use(errorHandler);
 
 // Configurar el puerto
 const PORT = process.env.PORT;

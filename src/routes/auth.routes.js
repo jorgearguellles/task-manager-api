@@ -4,6 +4,7 @@ const {
   register,
   login,
   getProfile,
+  logout,
 } = require('../controllers/auth.controller');
 const { auth } = require('../middleware/auth.middleware');
 const {
@@ -39,6 +40,25 @@ const validateRequest = require('../middleware/validation.middleware');
  *           enum: [user, admin]
  *           default: user
  *           description: Rol del usuario
+ *     LoginRequest:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *         password:
+ *           type: string
+ *           format: password
+ *     AuthResponse:
+ *       type: object
+ *       properties:
+ *         token:
+ *           type: string
+ *         user:
+ *           $ref: '#/components/schemas/User'
  */
 
 /**
@@ -56,10 +76,14 @@ const validateRequest = require('../middleware/validation.middleware');
  *     responses:
  *       201:
  *         description: Usuario registrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
  *       400:
- *         description: Datos de entrada inválidos
+ *         description: Datos de registro inválidos
  *       409:
- *         description: Email ya registrado
+ *         description: El email ya está registrado
  */
 router.post('/register', registerValidator, validateRequest, register);
 
@@ -74,33 +98,34 @@ router.post('/register', registerValidator, validateRequest, register);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *                 format: password
+ *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
  *         description: Login exitoso
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/User'
+ *               $ref: '#/components/schemas/AuthResponse'
  *       401:
  *         description: Credenciales inválidas
  */
 router.post('/login', loginValidator, validateRequest, login);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Cerrar sesión
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada exitosamente
+ *       401:
+ *         description: No autorizado
+ */
+router.post('/logout', logout);
 
 // Rutas protegidas
 router.get('/profile', auth, getProfile);

@@ -79,7 +79,7 @@ const login = async (req, res) => {
     // Generar token
     const token = user.generateAuthToken();
 
-    res.json({
+    res.status(200).json({
       message: 'Login exitoso',
       user: user.toPublicJSON(),
       token,
@@ -108,8 +108,25 @@ const getProfile = async (req, res) => {
   }
 };
 
+// Logout de usuario
+const logout = async (req, res) => {
+  try {
+    // Aquí podrías realizar acciones adicionales si es necesario, como invalidar tokens
+    res.status(200).json({
+      message: 'Logged out successfully',
+    });
+  } catch (error) {
+    logger.error('Logout error:', error);
+    res.status(500).json({
+      error: 'Logout failed',
+      message: 'Error al cerrar sesión',
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
+  logout,
 };
