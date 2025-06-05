@@ -1,127 +1,39 @@
-const User = require('../models/user.model');
+const authService = require('../services/auth.service');
 const logger = require('../config/logger');
 
 // Registrar nuevo usuario
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
-
-    // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        error: 'Email already exists',
-        message: 'Este email ya está registrado',
-      });
-    }
-
-    // Crear nuevo usuario
-    const user = new User({
-      name,
-      email,
-      password,
-    });
-
-    await user.save();
-
-    // Generar token
-    const token = user.generateAuthToken();
-
-    res.status(201).json({
-      message: 'Usuario registrado exitosamente',
-      user: user.toPublicJSON(),
-      token,
-    });
+    const result = await authService.register(req.body);
+    res.status(201).json(result);
   } catch (error) {
-    logger.error('Registration error:', error);
-    res.status(500).json({
-      error: 'Registration failed',
-      message: 'Error al registrar el usuario',
-    });
+    next(error);
   }
 };
 
 // Login de usuario
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-
-    // Buscar usuario y incluir password para comparación
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'Email o contraseña incorrectos',
-      });
-    }
-
-    // Verificar si el usuario está activo
-    if (!user.isActive) {
-      return res.status(401).json({
-        error: 'Account inactive',
-        message: 'Esta cuenta ha sido desactivada',
-      });
-    }
-
-    // Verificar contraseña
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'Email o contraseña incorrectos',
-      });
-    }
-
-    // Actualizar último login
-    user.lastLogin = new Date();
-    await user.save();
-
-    // Generar token
-    const token = user.generateAuthToken();
-
-    res.status(200).json({
-      message: 'Login exitoso',
-      user: user.toPublicJSON(),
-      token,
-    });
+    const result = await authService.login(req.body);
+    res.status(200).json(result);
   } catch (error) {
-    logger.error('Login error:', error);
-    res.status(500).json({
-      error: 'Login failed',
-      message: 'Error al iniciar sesión',
-    });
+    next(error);
   }
 };
 
 // Obtener perfil del usuario actual
-const getProfile = async (req, res) => {
+const getProfile = async (req, res, next) => {
   try {
-    res.json({
-      user: req.user.toPublicJSON(),
-    });
+    const user = await authService.getProfile(req.user.id);
+    res.status(200).json(user);
   } catch (error) {
-    logger.error('Get profile error:', error);
-    res.status(500).json({
-      error: 'Get profile failed',
-      message: 'Error al obtener el perfil',
-    });
+    next(error);
   }
 };
 
 // Logout de usuario
 const logout = async (req, res) => {
-  try {
-    // Aquí podrías realizar acciones adicionales si es necesario, como invalidar tokens
-    res.status(200).json({
-      message: 'Logged out successfully',
-    });
-  } catch (error) {
-    logger.error('Logout error:', error);
-    res.status(500).json({
-      error: 'Logout failed',
-      message: 'Error al cerrar sesión',
-    });
-  }
+  res.status(200).json({ message: 'Sesión cerrada exitosamente' });
 };
 
 module.exports = {

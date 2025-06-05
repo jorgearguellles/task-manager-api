@@ -1,16 +1,22 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const mongoose = require('mongoose');
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpecs = require('./config/swagger');
-const { errorHandler } = require('./middleware/error.middleware');
 require('dotenv').config();
 
+// Middlewares
+const {
+  errorHandler,
+  rateLimiter,
+  loggingMiddleware,
+  notFoundMiddleware,
+  swaggerMiddleware,
+} = require('./middleware');
+
+// Configuración
 const logger = require('./config/logger');
 const connectDB = require('./config/database');
+
+// Rutas
 const authRoutes = require('./routes/auth.routes');
 const taskRoutes = require('./routes/task.routes');
 
@@ -20,31 +26,16 @@ const app = express();
 // Conectar a base de datos
 connectDB();
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // máximo 100 requests por ventana
-  message: {
-    error: 'Too many requests from this IP, please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // Middlewares globales
 app.use(helmet()); // Security headers
 app.use(cors()); // Cross-origin requests
-app.use(limiter); // Rate limiting
-app.use(
-  morgan('combined', {
-    stream: { write: (message) => logger.info(message.trim()) },
-  })
-); // HTTP logging
+app.use(rateLimiter); // Rate limiting
+app.use(loggingMiddleware); // HTTP logging
 app.use(express.json({ limit: '10mb' })); // Parse JSON
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded
 
 // Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+app.use('/api-docs', ...swaggerMiddleware);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -89,13 +80,7 @@ app.use('/api', (req, res) => {
 });
 
 // Middleware para rutas no encontradas
-app.use('*', (req, res) => {
-  logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    error: 'Route not found',
-    message: `The route ${req.method} ${req.originalUrl} does not exist.`,
-  });
-});
+app.use('*', notFoundMiddleware);
 
 // Middleware global de manejo de errores
 app.use(errorHandler);
